@@ -15,6 +15,7 @@ import (
 const (
 	ver string = "0.11"
 	restartMaxBackOffDelaySeconds = 1000
+	restartIntervalBase = 2
 )
 
 var (
@@ -22,8 +23,9 @@ var (
 	service = kingpin.Flag("service", "local service name").Short('s').Required().String()
 	timeout = kingpin.Flag("timeout", "timeout for HTTP requests in seconds").Default("3").Short('t').Int()
 	interval = kingpin.Flag("interval", "healthcheck interval").Default("5").Short('i').Int()
-	failInterval = kingpin.Flag("fail-interval", "healthcheck interval during failed period").Default("1").Int()
+	failInterval = kingpin.Flag("fail-interval", "healthcheck interval during failed period").Default("2").Int()
 	failThreshold = kingpin.Flag("fail-threshold", "failed healthchecks threshold").Default("3").Int()
+	initialDelay = kingpin.Flag("initial-delay", "initial delay in seconds").Default("10").Int()
 	dryRun = kingpin.Flag("dry-run", "dry run").Short('n').Bool()
 )
 
@@ -100,7 +102,9 @@ func setHealthcheckFailed(failedHealthchecks, restartRequired chan bool, failThr
 	}
 }
 
-func serviceHealthcheck(failedHealthchecks, restartRequired, restartCounter chan bool, url string, timeout, interval, failInterval, failThreshold int) {
+func serviceHealthcheck(failedHealthchecks, restartRequired, restartCounter chan bool, url string, timeout, interval, failInterval, failThreshold, initialDelay int) {
+	time.Sleep(time.Second * time.Duration(initialDelay))
+
 	for {
 		ch := make(chan Msg)
 		go httpGet(url, ch)
@@ -155,7 +159,7 @@ func serviceRestart(failedHealthchecks, restartRequired, restartCounter chan boo
 				}
 			}
 		}
-		time.Sleep(time.Second * time.Duration(len(restartCounter)))
+		time.Sleep(time.Second * time.Duration(restartIntervalBase * len(restartCounter)))
 	}
 }
 
@@ -175,7 +179,7 @@ func main() {
 	failedHealthchecks := make(chan bool, *failThreshold + 1)
 	restartRequired := make(chan bool, 2)
 	restartCounter := make(chan bool, restartMaxBackOffDelaySeconds + 1)
-	go serviceHealthcheck(failedHealthchecks, restartRequired, restartCounter, *url, *timeout, *interval, *failInterval, *failThreshold)
+	go serviceHealthcheck(failedHealthchecks, restartRequired, restartCounter, *url, *timeout, *interval, *failInterval, *failThreshold, *initialDelay)
 	go serviceRestart(failedHealthchecks, restartRequired, restartCounter, *service, *dryRun, *failThreshold)
 	log.Info("Daemon started")
 	select {}
