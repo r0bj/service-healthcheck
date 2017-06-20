@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ver string = "0.10"
+	ver string = "0.11"
 	restartMaxBackOffDelaySeconds = 1000
 )
 
@@ -177,5 +177,6 @@ func main() {
 	restartCounter := make(chan bool, restartMaxBackOffDelaySeconds + 1)
 	go serviceHealthcheck(failedHealthchecks, restartRequired, restartCounter, *url, *timeout, *interval, *failInterval, *failThreshold)
 	go serviceRestart(failedHealthchecks, restartRequired, restartCounter, *service, *dryRun, *failThreshold)
+	log.Info("Daemon started")
 	select {}
 }
