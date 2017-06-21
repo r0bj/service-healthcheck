@@ -2,6 +2,7 @@
 
 Restarts upstart service when healthcheck defined as HTTP URL fails.
 
+```
 usage: service-healthcheck --service=SERVICE [<flags>]
 
 Flags:
@@ -16,3 +17,4 @@ Flags:
       --initial-delay=10  initial delay in seconds
   -n, --dry-run           dry run
       --version           Show application version.
+```
