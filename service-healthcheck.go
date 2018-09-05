@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ver string = "0.11"
+	ver string = "0.12"
 	restartMaxBackOffDelaySeconds = 1000
 	restartIntervalBase = 2
 )
@@ -56,9 +56,9 @@ func httpGet(url string, ch chan Msg) {
 	ch <- msg
 }
 
-func restartUpstartService(service string) error {
-	command := "service"
-	args := []string{service, "restart"}
+func restartSystemdService(service string) error {
+	command := "systemctl"
+	args := []string{"restart", service + ".service"}
 	cmd := exec.Command(command, args...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -149,7 +149,7 @@ func serviceRestart(failedHealthchecks, restartRequired, restartCounter chan boo
 					log.Info("Dry run, skipping")
 				} else {
 					// restart success
-					if err := restartUpstartService(service); err == nil {
+					if err := restartSystemdService(service); err == nil {
 						log.Infof("Service %s restarted", service)
 					// restart failed
 					} else {
