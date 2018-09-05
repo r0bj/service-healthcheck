@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ver string = "0.12"
+	ver string = "0.13"
 	restartMaxBackOffDelaySeconds = 1000
 	restartIntervalBase = 2
 )
@@ -37,7 +37,7 @@ type Msg struct {
 func httpGet(url string, ch chan Msg) {
 	var msg Msg
 	request := gorequest.New()
-	resp, body, errs := request.Get(url).End()
+	resp, body, errs := request.Get(url).Set("Connection", "close").End()
 
 	if errs != nil {
 		var errsStr []string
